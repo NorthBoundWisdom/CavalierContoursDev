@@ -7,7 +7,7 @@ SimpleCircleNode::SimpleCircleNode() : FlatColorGeometryNode(true) {
   m_radius = 1;
   // Draw vertex markers as hollow squares for stable rendering across backends.
   m_geometry.setDrawingMode(QSGGeometry::DrawLineStrip);
-  m_geometry.setLineWidth(1.5f);
+  m_geometry.setLineWidth(1.0f);
 }
 
 void SimpleCircleNode::setGeometry(qreal x, qreal y, qreal radius) {

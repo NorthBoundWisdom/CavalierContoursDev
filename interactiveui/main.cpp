@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   app.setFont(defaultFont);
 
   QSurfaceFormat format;
-  format.setSamples(16);
+  format.setSamples(8);
   QSurfaceFormat::setDefaultFormat(format);
 
   QQmlApplicationEngine engine;

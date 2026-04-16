@@ -228,7 +228,7 @@ SplitView {
         SplitView.maximumWidth: 440
         SplitView.fillHeight: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        contentWidth: controlColumn.width
+        contentWidth: availableWidth
         contentHeight: controlColumn.implicitHeight
 
         Column {

@@ -1,4 +1,5 @@
 import QtQuick 2.13
+import QtQml 2.13
 import Polyline 1.0
 
 Rectangle {
@@ -11,6 +12,18 @@ Rectangle {
         id: plineSceneItem
         property real sceneSize: 20000
 
+        QtObject {
+            id: interactionState
+            property real x1: 0
+            property real y1: 0
+            property real y2: 0
+            property real x2: 0
+            property real zoom1: 1
+            property real zoom2: 1
+            property real maxZoom: 10
+            property real minZoom: 0.05
+        }
+
         width: sceneSize
         height: sceneSize
         // Initially center (0,0) based on current viewport size.
@@ -21,38 +34,30 @@ Rectangle {
 
         transform: Scale {
             id: scaler
-            origin.x: pinchArea.m_x2
-            origin.y: pinchArea.m_y2
-            xScale: pinchArea.m_zoom2
-            yScale: pinchArea.m_zoom2
+            origin.x: interactionState.x2
+            origin.y: interactionState.y2
+            xScale: interactionState.zoom2
+            yScale: interactionState.zoom2
         }
 
         PinchArea {
             id: pinchArea
             anchors.fill: parent
-            property real m_x1: 0
-            property real m_y1: 0
-            property real m_y2: 0
-            property real m_x2: 0
-            property real m_zoom1: 1
-            property real m_zoom2: 1
-            property real m_max: 10
-            property real m_min: 0.05
 
             onPinchStarted: {
-                m_x1 = scaler.origin.x;
-                m_y1 = scaler.origin.y;
-                m_x2 = pinch.startCenter.x;
-                m_y2 = pinch.startCenter.y;
-                plineSceneItem.x = plineSceneItem.x + (pinchArea.m_x1 - pinchArea.m_x2) * (1 - pinchArea.m_zoom1);
-                plineSceneItem.y = plineSceneItem.y + (pinchArea.m_y1 - pinchArea.m_y2) * (1 - pinchArea.m_zoom1);
+                interactionState.x1 = scaler.origin.x;
+                interactionState.y1 = scaler.origin.y;
+                interactionState.x2 = pinch.startCenter.x;
+                interactionState.y2 = pinch.startCenter.y;
+                plineSceneItem.x = plineSceneItem.x + (interactionState.x1 - interactionState.x2) * (1 - interactionState.zoom1);
+                plineSceneItem.y = plineSceneItem.y + (interactionState.y1 - interactionState.y2) * (1 - interactionState.zoom1);
             }
             onPinchUpdated: {
-                m_zoom1 = scaler.xScale;
+                interactionState.zoom1 = scaler.xScale;
                 var dz = pinch.scale - pinch.previousScale;
-                var newZoom = m_zoom1 + dz;
-                if (newZoom <= m_max && newZoom >= m_min) {
-                    m_zoom2 = newZoom;
+                var newZoom = interactionState.zoom1 + dz;
+                if (newZoom <= interactionState.maxZoom && newZoom >= interactionState.minZoom) {
+                    interactionState.zoom2 = newZoom;
                 }
             }
 
@@ -62,32 +67,32 @@ Rectangle {
                 anchors.fill: parent
                 drag.target: plineSceneItem
                 drag.filterChildren: true
-                onWheel: {
-                    pinchArea.m_x1 = scaler.origin.x;
-                    pinchArea.m_y1 = scaler.origin.y;
-                    pinchArea.m_zoom1 = scaler.xScale;
+                onWheel: function(wheel) {
+                    interactionState.x1 = scaler.origin.x;
+                    interactionState.y1 = scaler.origin.y;
+                    interactionState.zoom1 = scaler.xScale;
 
-                    pinchArea.m_x2 = mouseX;
-                    pinchArea.m_y2 = mouseY;
+                    interactionState.x2 = mouseX;
+                    interactionState.y2 = mouseY;
 
                     var newZoom;
                     if (wheel.angleDelta.y > 0) {
-                        newZoom = pinchArea.m_zoom1 + 0.15;
-                        if (newZoom <= pinchArea.m_max) {
-                            pinchArea.m_zoom2 = newZoom;
+                        newZoom = interactionState.zoom1 + 0.15;
+                        if (newZoom <= interactionState.maxZoom) {
+                            interactionState.zoom2 = newZoom;
                         } else {
-                            pinchArea.m_zoom2 = pinchArea.m_max;
+                            interactionState.zoom2 = interactionState.maxZoom;
                         }
                     } else {
-                        newZoom = pinchArea.m_zoom1 - 0.15;
-                        if (newZoom >= pinchArea.m_min) {
-                            pinchArea.m_zoom2 = newZoom;
+                        newZoom = interactionState.zoom1 - 0.15;
+                        if (newZoom >= interactionState.minZoom) {
+                            interactionState.zoom2 = newZoom;
                         } else {
-                            pinchArea.m_zoom2 = pinchArea.m_min;
+                            interactionState.zoom2 = interactionState.minZoom;
                         }
                     }
-                    plineSceneItem.x = plineSceneItem.x + (pinchArea.m_x1 - pinchArea.m_x2) * (1 - pinchArea.m_zoom1);
-                    plineSceneItem.y = plineSceneItem.y + (pinchArea.m_y1 - pinchArea.m_y2) * (1 - pinchArea.m_zoom1);
+                    plineSceneItem.x = plineSceneItem.x + (interactionState.x1 - interactionState.x2) * (1 - interactionState.zoom1);
+                    plineSceneItem.y = plineSceneItem.y + (interactionState.y1 - interactionState.y2) * (1 - interactionState.zoom1);
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -100,14 +105,14 @@ Rectangle {
             x: parent.width / 2
             height: parent.height
             color: "black"
-            width: 1 / pinchArea.m_zoom2
+            width: 1 / interactionState.zoom2
         }
         Rectangle {
             id: verticalAxis
             y: parent.height / 2
             width: parent.width
             color: "black"
-            height: 1 / pinchArea.m_zoom2
+            height: 1 / interactionState.zoom2
         }
     }
 }
